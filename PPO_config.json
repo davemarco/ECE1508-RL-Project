@@ -1,0 +1,16 @@
+{
+    "action_repeat": 1,
+    "batch_size": 1024,
+    "discounting": 0.995,
+    "entropy_cost": 0.01,
+    "episode_length": 1000,
+    "learning_rate": 0.0003,
+    "normalize_observations": true,
+    "num_envs": 4096,
+    "num_evals": 10,
+    "num_minibatches": 32,
+    "num_timesteps": 500000000,
+    "num_updates_per_batch": 16,
+    "reward_scaling": 1.0,
+    "unroll_length": 32
+}
