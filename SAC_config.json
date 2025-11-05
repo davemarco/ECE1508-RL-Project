@@ -1,0 +1,18 @@
+{
+    "action_repeat": 1,
+    "batch_size": 512,
+    "discounting": 0.99,
+    "episode_length": 1000,
+    "learning_rate": 0.001,
+    "normalize_observations": true,
+    "num_envs": 128,
+    "num_evals": 10,
+    "num_timesteps": 10000000,
+    "reward_scaling": 1.0,
+    "grad_updates_per_step": 8,
+    "max_replay_size": 4194304,
+    "min_replay_size": 8192,
+    "network_factory": {
+        "q_network_layer_norm": true
+    }
+}

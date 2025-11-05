@@ -90,7 +90,7 @@ def train_sac(env, sac_params, times, output_dir):
             **sac_params.network_factory
         )
     
-    n_updates = int(sac_params.num_timesteps / (sac_params.num_envs * sac_params.unroll_length))
+    n_updates = int(sac_params.num_timesteps / (sac_params.num_envs * sac_params.grad_updates_per_step))
     pbar = tqdm(total=n_updates, desc="Training steps")
     
     train_fn = functools.partial(
@@ -136,6 +136,7 @@ def get_args():
     parser.add_argument("--num_minibatches", type=int, default=32, help="Number of minibatches for the training")
     parser.add_argument("--num_updates_per_batch", type=int, default=16, help="Number of updates per batch")
     parser.add_argument("--config_file", type=str, default=None, help="Path to the config file")
+    # parser.add_argument("--seed", type=int, default=0, help="Seed for the training")
     return parser.parse_args()
 
 if __name__ == "__main__":
