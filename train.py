@@ -62,7 +62,6 @@ def train_ppo(env, ppo_params, times, output_dir):
         network_factory=network_factory,
         progress_fn=functools.partial(progress, 
                                       pbar=pbar, 
-                                      params=ppo_params, 
                                       times=times, 
                                       x_data=x_data, 
                                       y_data=y_data, 
@@ -78,7 +77,7 @@ def train_ppo(env, ppo_params, times, output_dir):
     print(f"time to jit: {times[1] - times[0]}")
     print(f"time to train: {times[-1] - times[1]}")
 
-    return make_inference_fn, params, metrics
+    return make_inference_fn, params, metrics, x_data, y_data, y_dataerr
 
 def train_sac(env, sac_params, times, output_dir):
     x_data, y_data, y_dataerr = [], [], []
@@ -99,7 +98,6 @@ def train_sac(env, sac_params, times, output_dir):
         network_factory=network_factory,
         progress_fn=functools.partial(progress, 
                                       pbar=pbar, 
-                                      params=sac_params,
                                       times=times, 
                                       x_data=x_data, 
                                       y_data=y_data, 
@@ -115,7 +113,7 @@ def train_sac(env, sac_params, times, output_dir):
     print(f"time to jit: {times[1] - times[0]}")
     print(f"time to train: {times[-1] - times[1]}")
 
-    return make_inference_fn, params, metrics
+    return make_inference_fn, params, metrics, x_data, y_data, y_dataerr
 
 
 def get_args():
@@ -170,9 +168,9 @@ if __name__ == "__main__":
 
     times = [datetime.now()]
     if args.algo == "PPO":
-        make_inference_fn, params, metrics = train_ppo(env, params, times, args.output_dir)
+        make_inference_fn, params, metrics, x_data, y_data, y_dataerr = train_ppo(env, params, times, args.output_dir)
     elif args.algo == "SAC":
-        make_inference_fn, params, metrics = train_sac(env, params, times, args.output_dir)
+        make_inference_fn, params, metrics, x_data, y_data, y_dataerr = train_sac(env, params, times, args.output_dir)
     
     #? Save the model
     with open(f"{args.output_dir}/model_{args.algo}_{env_name}.pkl", "wb") as f:
@@ -186,6 +184,20 @@ if __name__ == "__main__":
     #? Save the metrics
     with open(f"{args.output_dir}/metrics_{args.algo}_{env_name}.json", "w") as f:
         json.dump(metrics, f, indent=4)
+    
+    #? Save the x_data, y_data, y_dataerr
+    with open(f"{args.output_dir}/x_data_{args.algo}_{env_name}.npy", "wb") as f:
+        if isinstance(x_data, list):
+            x_data = np.array(x_data)
+        np.save(f, x_data)
+    with open(f"{args.output_dir}/y_data_{args.algo}_{env_name}.npy", "wb") as f:
+        if isinstance(y_data, list):
+            y_data = np.array(y_data)
+        np.save(f, y_data)
+    with open(f"{args.output_dir}/y_dataerr_{args.algo}_{env_name}.npy", "wb") as f:
+        if isinstance(y_dataerr, list):
+            y_dataerr = np.array(y_dataerr)
+        np.save(f, y_dataerr)
     
     #? Collect a rollout
     rng = jax.random.PRNGKey(0)
