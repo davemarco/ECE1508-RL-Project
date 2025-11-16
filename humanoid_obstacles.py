@@ -27,7 +27,7 @@ from mujoco_playground._src import mjx_env
 from mujoco_playground._src import reward
 from mujoco_playground._src.dm_control_suite import common
 
-_XML_PATH = Path("/groups/mayygrp/RL/ECE1508-RL-Project/humanoid_uneven.xml")
+_XML_PATH = Path("humanoid_uneven.xml")
 # Height of head above which stand reward is 1.
 _STAND_HEIGHT = 1.4
 
@@ -99,8 +99,6 @@ class Humanoid(mjx_env.MjxEnv):
             njmax=self._config.njmax,
         )
 
-        # Raise the humanoid higher to avoid terrain collision
-        data = data.replace(qpos=data.qpos.at[2].set(2.3))
 
         data = mjx.forward(self.mjx_model, data)
 

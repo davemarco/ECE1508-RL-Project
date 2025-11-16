@@ -1,5 +1,3 @@
-# run_local.py — headless-safe viewer that writes rollout.mp4
-
 import os
 # 1) Make sure we use EGL (headless). Do this BEFORE importing mujoco.
 os.environ.setdefault("MUJOCO_GL", "egl")
