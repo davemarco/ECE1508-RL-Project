@@ -21,12 +21,13 @@ import jax.numpy as jp
 from ml_collections import config_dict
 import mujoco
 from mujoco import mjx
+from pathlib import Path
 
 from mujoco_playground._src import mjx_env
 from mujoco_playground._src import reward
 from mujoco_playground._src.dm_control_suite import common
 
-_XML_PATH = mjx_env.ROOT_PATH / "dm_control_suite" / "xmls" / "humanoid.xml"
+_XML_PATH = Path("/groups/mayygrp/RL/ECE1508-RL-Project/humanoid_uneven.xml")
 # Height of head above which stand reward is 1.
 _STAND_HEIGHT = 1.4
 
@@ -91,12 +92,16 @@ class Humanoid(mjx_env.MjxEnv):
     def reset(self, rng: jax.Array) -> mjx_env.State:
         # TODO(kevin): Add non-penetrating joint randomization.
 
-        data = mjx_env.make_data(
+        data = mjx.make_data(
             self.mj_model,
             impl=self.mjx_model.impl.value,
             nconmax=self._config.nconmax,
             njmax=self._config.njmax,
         )
+
+        # Raise the humanoid higher to avoid terrain collision
+        data = data.replace(qpos=data.qpos.at[2].set(2.3))
+
         data = mjx.forward(self.mjx_model, data)
 
         metrics = {

@@ -18,6 +18,8 @@ import jax
 import pickle
 from ml_collections import config_dict
 
+from humanoid_obstacles import Humanoid, default_config
+
 def progress(num_steps, metrics, pbar, times, x_data, y_data, y_dataerr, output_dir, total_timesteps):
     # Only log/plot on process 0 if multi-host (optional).
     if pbar is not None:
@@ -26,7 +28,7 @@ def progress(num_steps, metrics, pbar, times, x_data, y_data, y_dataerr, output_
 
     r = metrics.get("eval/episode_reward", None)
     r_std = metrics.get("eval/episode_reward_std", None)
-    
+
     times.append(datetime.now())
     x_data.append(num_steps)
     y_data.append(r)
@@ -42,6 +44,18 @@ def progress(num_steps, metrics, pbar, times, x_data, y_data, y_dataerr, output_
     plt.close()
 
 def make_env(env_name, episode_length, action_repeat):
+    # Branch: our custom environment
+    if env_name == "HumanoidWalk":
+        env_config = default_config()
+        env_config.episode_length = episode_length
+        env_config.action_repeat = action_repeat
+        env = Humanoid(
+            move_speed=1.0,
+            config=env_config
+        )
+        return env
+
+    # Fallback: use existing registry-based envs
     env_cfg = registry.get_default_config(env_name)
     env_cfg.episode_length = episode_length
     env_cfg.action_repeat = action_repeat
@@ -74,11 +88,11 @@ def train_ppo(env_maker, ppo_cfg, times, output_dir):
         ppo.train,
         **ppo_training_cfg,
         network_factory=network_factory,
-        progress_fn=functools.partial(progress, 
-                                      pbar=pbar, 
-                                      times=times, 
-                                      x_data=x_data, 
-                                      y_data=y_data, 
+        progress_fn=functools.partial(progress,
+                                      pbar=pbar,
+                                      times=times,
+                                      x_data=x_data,
+                                      y_data=y_data,
                                       y_dataerr=y_dataerr,
                                       output_dir=output_dir,
                                       total_timesteps=total_timesteps)
@@ -107,14 +121,14 @@ def train_sac(env_maker, sac_cfg, times, output_dir):
     total_timesteps = sac_cfg.num_timesteps
 
     train_fn = functools.partial(
-        sac.train, 
+        sac.train,
         **sac_training_cfg,
         network_factory=network_factory,
-        progress_fn=functools.partial(progress, 
-                                      pbar=pbar, 
-                                      times=times, 
-                                      x_data=x_data, 
-                                      y_data=y_data, 
+        progress_fn=functools.partial(progress,
+                                      pbar=pbar,
+                                      times=times,
+                                      x_data=x_data,
+                                      y_data=y_data,
                                       y_dataerr=y_dataerr,
                                       output_dir=output_dir,
                                       total_timesteps=total_timesteps)
@@ -193,7 +207,6 @@ if __name__ == "__main__":
         make_inference_fn, trained_params, metrics, x_data, y_data, y_dataerr = train_ppo(env_maker, params, times, args.output_dir)
     elif args.algo == "SAC":
         make_inference_fn, trained_params, metrics, x_data, y_data, y_dataerr = train_sac(env_maker, params, times, args.output_dir)
-        
 
     # #? Save the model
     # with open(f"{args.output_dir}/model_{args.algo}_{env_name}.pkl", "wb") as f:
@@ -210,7 +223,7 @@ if __name__ == "__main__":
     # with open(f"{args.output_dir}/metrics_{args.algo}_{env_name}.json", "w") as f:
     #     json.dump(metrics, f, indent=4)
 
-    
+
 
     #? Save the x_data, y_data, y_dataerr
 
