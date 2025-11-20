@@ -1,0 +1,14 @@
+--extra-index-url https://py.mujoco.org
+easydict
+numpy==2.1.2
+scipy==1.14.1
+matplotlib==3.10.5
+jax[cuda12]
+mujoco
+mujoco_mjx
+brax
+playground
+mediapy
+warp
+git+https://github.com/google-deepmind/mujoco_warp.git
+ipywidgets
