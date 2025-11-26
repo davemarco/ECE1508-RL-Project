@@ -16,12 +16,14 @@ from brax.training.agents.sac import networks as sac_networks
 from brax.training.agents.sac import train as sac
 import jax
 import pickle
+import random
+import torch
 from ml_collections import config_dict
 import csv
 import math
 import warnings
 
-from humanoid_obstacles import Humanoid, default_config
+from core.envs.humanoid_obstacles import HumanoidObstacles, default_config
 
 # ---- Simple CSV metrics logger that adapts to whatever keys show up ----
 class CSVLogger:
@@ -200,22 +202,22 @@ def progress(
 
 def make_env(env_name, episode_length, action_repeat):
     # Branch: our custom environment
-    if env_name == "HumanoidWalk":
+    if env_name == "HumanoidWalkObstacles":
         env_config = default_config()
         env_config.episode_length = episode_length
         env_config.action_repeat = action_repeat
-        env = Humanoid(
+        env = HumanoidObstacles(
             move_speed=1.0,
             config=env_config
         )
         return env
-
-    # Fallback: use existing registry-based envs
-    env_cfg = registry.get_default_config(env_name)
-    env_cfg.episode_length = episode_length
-    env_cfg.action_repeat = action_repeat
-    env = registry.load(env_name, config=env_cfg)
-    return env
+    else:
+        # Fallback: use existing registry-based envs
+        env_cfg = registry.get_default_config(env_name)
+        env_cfg.episode_length = episode_length
+        env_cfg.action_repeat = action_repeat
+        env = registry.load(env_name, config=env_cfg)
+        return env
 
 # Wrapper that matches Brax's expected signature; accepts env instance or factory.
 def my_env_wrap(env, **kwargs):
@@ -307,7 +309,7 @@ def train_sac(env_maker, sac_cfg, times, output_dir, csv_logger, loss_plotter):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", type=str, default="HumanoidWalk")
+    parser.add_argument("--env", type=str, default="HumanoidWalk", choices=["HumanoidWalk", "HumanoidWalkObstacles"])
     parser.add_argument("--algo", type=str, default="PPO", choices=["PPO", "SAC"])
     parser.add_argument("--num_timesteps", type=int, default=int(5e8))
     parser.add_argument("--num_envs", type=int, default=4096)
@@ -325,13 +327,24 @@ def get_args():
     parser.add_argument("--num_minibatches", type=int, default=32, help="Number of minibatches for the training")
     parser.add_argument("--num_updates_per_batch", type=int, default=16, help="Number of updates per batch")
     parser.add_argument("--config_file", type=str, default=None, help="Path to the config file")
-    # parser.add_argument("--seed", type=int, default=0, help="Seed for the training")
+    parser.add_argument("--seed", type=int, default=0, help="Seed for the training")
+    parser.add_argument("--deterministic", type=bool, default=True, help="Deterministic mode for the training")
     return parser.parse_args()
+
+def seed_everything(seed: int, deterministic: bool):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = deterministic
+    jax.random.PRNGKey(seed)
+    
 
 if __name__ == "__main__":
     np.set_printoptions(precision=3, suppress=True, linewidth=100)
     args = get_args()
     env_name = args.env
+    
+    seed_everything(args.seed, args.deterministic)
 
     # On multi-device: ensure num_envs divisible by jax.local_device_count()
     device_count = jax.local_device_count()
@@ -392,9 +405,9 @@ if __name__ == "__main__":
         np.save(f, np.array(y_dataerr))
 
     # Post-training evaluation and rendering:
-    rng = jax.random.PRNGKey(0)
+    rng = jax.random.PRNGKey(args.seed)
     rollout = []
-    n_episodes = 1
+    n_episodes = 100
 
     eval_env = env_maker()
     jit_reset = jax.jit(eval_env.reset)
