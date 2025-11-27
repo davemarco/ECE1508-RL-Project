@@ -514,7 +514,11 @@ def main():
                 break
             obs = next_obs
 
-        return episode_returns.mean().item(), episode_lengths.mean().item()
+        return (
+            episode_returns.mean().item(),
+            episode_returns.std().item(),
+            episode_lengths.mean().item(),
+        )
 
     def render_with_rollout():
         # Quick rollout for rendering
@@ -710,6 +714,8 @@ def main():
     start_time = None
     desc = ""
 
+    x_data, y_data, y_dataerr = [], [], []
+
     try:
         while global_step < args.total_timesteps:
             mark_step()
@@ -853,12 +859,17 @@ def main():
                             and global_step % args.eval_interval == 0
                         ):
                             print(f"Evaluating at global step {global_step}")
-                            eval_avg_return, eval_avg_length = evaluate()
+                            eval_avg_return, eval_avg_std, eval_avg_length = evaluate()
                             if env_type in ["humanoid_bench", "isaaclab", "mtbench"]:
                                 # NOTE: Hacky way of evaluating performance, but just works
                                 obs = envs.reset()
                             logs["eval_avg_return"] = eval_avg_return
+                            logs["eval_return_std"] = eval_avg_std
                             logs["eval_avg_length"] = eval_avg_length
+                            
+                            x_data.append(global_step * args.num_envs)
+                            y_data.append(eval_avg_return)
+                            y_dataerr.append(eval_avg_std)
 
                         if (
                             args.render_interval > 0
@@ -937,6 +948,14 @@ def main():
             pbar.update(1)
     finally:
         csv_logger.close()
+        
+        # Save curves arrays
+        with open(f"{run_dir}/x_data_{args.agent}_{args.env_name}.npy", "wb") as f:
+            np.save(f, np.array(x_data))
+        with open(f"{run_dir}/y_data_{args.agent}_{args.env_name}.npy", "wb") as f:
+            np.save(f, np.array(y_data))
+        with open(f"{run_dir}/y_dataerr_{args.agent}_{args.env_name}.npy", "wb") as f:
+            np.save(f, np.array(y_dataerr))
 
     save_params(
         global_step,
