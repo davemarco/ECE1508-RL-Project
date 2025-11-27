@@ -143,18 +143,21 @@ class Humanoid(mjx_env.MjxEnv):
     ) -> jax.Array:
         del info  # Unused.
 
+        # Relative standing height: head height minus estimated local ground height.
+        rel_head_height = self._head_height(data) - self._ground_height(data)
         standing = reward.tolerance(
-            self._head_height(data),
+            rel_head_height,
             bounds=(_STAND_HEIGHT, float("inf")),
-            margin=_STAND_HEIGHT / 4,
+            margin=_STAND_HEIGHT / 4,  # margin used for relative height
         )
         metrics["reward/standing"] = standing
 
+        # Relax upright tolerance on uneven terrain.
         upright = reward.tolerance(
             self._torso_upright(data),
-            bounds=(0.9, float("inf")),
+            bounds=(0.7, float("inf")),  # relaxed lower bound
             sigmoid="linear",
-            margin=1.9,
+            margin=2.5,                  # increased margin
             value_at_margin=0,
         )
         metrics["reward/upright"] = upright
@@ -168,19 +171,30 @@ class Humanoid(mjx_env.MjxEnv):
         small_control = (4 + small_control) / 5
         metrics["reward/small_control"] = small_control
 
+        # Move reward based on forward speed along local tangent plane.
         move_reward = self._stand_or_move_reward(data)
         metrics["reward/move"] = move_reward
 
         return stand_reward * move_reward * small_control
 
     def _stand_reward(self, data: mjx.Data) -> jax.Array:
-        horizontal_velocity = self._center_of_mass_velocity(data)[:2]
-        dont_move = reward.tolerance(horizontal_velocity, margin=2).mean()
+        # Encourage minimal drift along local tangent plane.
+        v = self._center_of_mass_velocity(data)
+        _, v_tangent = self._project_to_tangent_plane(data, v)
+        dont_move = reward.tolerance(v_tangent[:2], margin=2).mean()
         return dont_move
 
     def _move_reward(self, data: mjx.Data) -> jax.Array:
+        # Forward progress along torso heading projected onto local tangent plane.
+        v = self._center_of_mass_velocity(data)
+        R = data.xmat[self._torso_body_id]          # 3x3 rotation
+        forward_dir = R[:, 0]                        # body x-axis
+        forward_dir, _ = self._project_to_tangent_plane(data, forward_dir)
+        forward_dir = forward_dir / (jp.linalg.norm(forward_dir) + 1e-8)
+        v_tangent = self._project_to_tangent_plane(data, v)[1]
+        forward_speed = jp.dot(v_tangent, forward_dir)
         move = reward.tolerance(
-            jp.linalg.norm(self._center_of_mass_velocity(data)[:2]),
+            forward_speed,
             bounds=(self._move_speed, float("inf")),
             margin=self._move_speed,
             value_at_margin=0,
@@ -219,6 +233,31 @@ class Humanoid(mjx_env.MjxEnv):
         torso_pos = data.xpos[self._torso_body_id]
         torso_to_limb = data.xpos[self._extremities_ids] - torso_pos
         return torso_to_limb @ torso_frame
+
+    # Simple ground estimate: min of feet z; if airborne, use torso z.
+    def _ground_height(self, data: mjx.Data) -> jax.Array:
+        """Estimate local ground height.
+        Uses the minimum of the feet z-positions as a proxy for ground under the agent.
+        If both feet are above the torso z (e.g., airborne), fall back to torso z.
+        This avoids sampling the heightfield and keeps the computation simple and robust.
+        """
+        # Correct indexing into data.xpos: use bracket notation [body_id, coord]
+        left_foot_z = data.xpos[self.mj_model.body("left_foot").id, 2]
+        right_foot_z = data.xpos[self.mj_model.body("right_foot").id, 2]
+        feet_z = jp.minimum(left_foot_z, right_foot_z)
+        torso_z = data.xpos[self._torso_body_id, 2]
+        return jp.where(feet_z < torso_z, feet_z, torso_z)
+
+    def _project_to_tangent_plane(self, data: mjx.Data, vec3: jax.Array) -> tuple[jax.Array, jax.Array]:
+        """Project vec3 onto the plane orthogonal to torso up.
+        Returns (normal_component, tangent_component).
+        The torso up vector is normalized with a small epsilon (1e-8) to avoid NaNs if its norm is near-zero.
+        """
+        n = data.xmat[self._torso_body_id][:, 2]  # torso up axis (world)
+        n = n / (jp.linalg.norm(n) + 1e-8)        # epsilon avoids division-by-zero
+        normal_comp = jp.dot(vec3, n) * n
+        tangent_comp = vec3 - normal_comp
+        return normal_comp, tangent_comp
 
     @property
     def xml_path(self) -> str:
