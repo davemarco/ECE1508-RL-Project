@@ -5,7 +5,7 @@
 Creates a heightfield PNG for uneven terrain in MuJoCo.
 
 ```bash
-python generate_map.py
+python generate_terrain.py
 ```
 
 This generates `common/heightfields/terrain.png` (20m×20m terrain with smooth bumps).
@@ -22,4 +22,4 @@ This creates `rollout.mp4` showing the humanoid on the current terrain.
 
 ---
 
-**Note:** Run `generate_map.py` first, then `preview_terrain.py` to visualize before training.
+**Note:** Run `generate_terrain.py` first, then `preview_terrain.py` to visualize before training.
