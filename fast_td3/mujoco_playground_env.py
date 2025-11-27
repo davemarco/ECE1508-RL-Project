@@ -83,6 +83,7 @@ def make_env(
     use_tuned_reward=False,
     use_domain_randomization=False,
     use_push_randomization=False,
+    create_render_env=True,
 ):
     # Make training environment
     train_env_cfg = registry.get_default_config(env_name)
@@ -143,14 +144,18 @@ def make_env(
     if is_humanoid_task and not use_push_randomization:
         render_env_cfg.push_config.enable = False
         render_env_cfg.push_config.magnitude_range = [0.0, 0.0]
-    render_env = registry.load(env_name, config=render_env_cfg)
-    render_env = PlaygroundEvalEnvWrapper(
-        render_env,
-        render_env_cfg.episode_length,
-        env_name,
-        1,
-        seed,
-        device_rank=device_rank,
-    )
+    
+    if create_render_env:
+        render_env = registry.load(env_name, config=render_env_cfg)
+        render_env = PlaygroundEvalEnvWrapper(
+            render_env,
+            render_env_cfg.episode_length,
+            env_name,
+            1,
+            seed,
+            device_rank=device_rank,
+        )
+    else:
+        render_env = None
 
     return train_env, eval_env, render_env
