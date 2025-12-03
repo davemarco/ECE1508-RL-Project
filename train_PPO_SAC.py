@@ -23,7 +23,7 @@ import csv
 import math
 import warnings
 
-from core.envs.humanoid_obstacles import HumanoidObstacles, default_config
+from core.envs.humanoid_obstacles import Humanoid, default_config
 
 # ---- Simple CSV metrics logger that adapts to whatever keys show up ----
 class CSVLogger:
@@ -202,11 +202,11 @@ def progress(
 
 def make_env(env_name, episode_length, action_repeat):
     # Branch: our custom environment
-    if env_name == "HumanoidWalkObstacles":
+    if env_name == "HumanoidWalkWithObstacles":
         env_config = default_config()
         env_config.episode_length = episode_length
         env_config.action_repeat = action_repeat
-        env = HumanoidObstacles(
+        env = Humanoid(
             move_speed=1.0,
             config=env_config
         )
@@ -309,7 +309,7 @@ def train_sac(env_maker, sac_cfg, times, output_dir, csv_logger, loss_plotter):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", type=str, default="HumanoidWalk", choices=["HumanoidWalk", "HumanoidWalkObstacles"])
+    parser.add_argument("--env", type=str, default="HumanoidWalk", choices=["HumanoidWalk", "HumanoidWalkWithObstacles"])
     parser.add_argument("--algo", type=str, default="PPO", choices=["PPO", "SAC"])
     parser.add_argument("--num_timesteps", type=int, default=int(5e8))
     parser.add_argument("--num_envs", type=int, default=4096)
@@ -355,7 +355,11 @@ if __name__ == "__main__":
 
     # Configuration object
     if args.algo == "PPO":
-        ppo_cfg = dm_control_suite_params.brax_ppo_config(env_name)
+        if env_name == "HumanoidWalkWithObstacles":
+            env_name_official = "HumanoidWalk"
+        else:
+            env_name_official = env_name
+        ppo_cfg = dm_control_suite_params.brax_ppo_config(env_name_official)
         # Override from CLI/config
         # ppo_cfg.update(vars(args))
         if args.config_file is not None:
@@ -364,7 +368,11 @@ if __name__ == "__main__":
             ppo_cfg.update(config_params)
         params = ppo_cfg
     elif args.algo == "SAC":
-        sac_cfg = dm_control_suite_params.brax_sac_config(env_name)
+        if env_name == "HumanoidWalkWithObstacles":
+            env_name_official = "HumanoidWalk"
+        else:
+            env_name_official = env_name
+        sac_cfg = dm_control_suite_params.brax_sac_config(env_name_official)
         # Override from CLI/config
         # sac_cfg.update(vars(args))
         if args.config_file is not None:
