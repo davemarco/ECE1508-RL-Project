@@ -14,7 +14,7 @@ from mujoco_playground._src.dm_control_suite import common
 # _XML_PATH = Path("/content/FastTD3/fast_td3/environments/humanoid_uneven.xml")
 # print("____test output______")
 #_XML_PATH = Path("/content/FastTD3/FastTD3/fast_td3/environments/humanoid_uneven.xml")
-_XML_PATH = Path("humanoid_uneven.xml")
+_XML_PATH = Path("core/envs/humanoid_uneven.xml")
 # Height of head above which stand reward is 1.
 _STAND_HEIGHT = 1.4
 
