@@ -22,6 +22,7 @@ from ml_collections import config_dict
 import csv
 import math
 import warnings
+import optax
 
 from core.envs.humanoid_obstacles import Humanoid, default_config
 
@@ -277,12 +278,33 @@ def train_sac(env_maker, sac_cfg, times, output_dir, csv_logger, loss_plotter):
             sac_networks.make_sac_networks,
             **sac_cfg.network_factory
         )
+
+    # Patch the sac.train function to use gradient clipping
+    import brax.training.agents.sac.train as sac_train_module
+    original_train = sac_train_module.train
+    
+    def patched_train(*args, **kwargs):
+        original_adam = optax.adam
+        max_grad_norm = 0.5
+        def adam_with_clip(learning_rate, **adam_kwargs):
+            # Use the stored original_adam, not optax.adam
+            return optax.chain(
+                optax.clip_by_global_norm(max_grad_norm),
+                original_adam(learning_rate, **adam_kwargs)
+            )
+        optax.adam = adam_with_clip
+        try:
+            result = original_train(*args, **kwargs)
+        finally:
+            optax.adam = original_adam
+        return result
+
     n_updates = int(sac_cfg.num_timesteps / (sac_cfg.num_envs * sac_cfg.grad_updates_per_step))
     pbar = tqdm(total=n_updates, desc="Training steps")
     total_timesteps = sac_cfg.num_timesteps
 
     train_fn = functools.partial(
-        sac.train,
+        patched_train,
         **sac_training_cfg,
         network_factory=network_factory,
         progress_fn=functools.partial(
@@ -341,6 +363,7 @@ def seed_everything(seed: int, deterministic: bool):
 
 if __name__ == "__main__":
     np.set_printoptions(precision=3, suppress=True, linewidth=100)
+    jax.config.update("jax_enable_x64", True)
     args = get_args()
     env_name = args.env
     
