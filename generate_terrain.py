@@ -6,11 +6,11 @@ from scipy.ndimage import gaussian_filter
 
 def get_args():
     parser = argparse.ArgumentParser(description="Generate uneven terrain heightfield for MuJoCo")
-    parser.add_argument("--size", type=float, default=20.0, help="Terrain size in meters (default: 20m x 20m)")
-    parser.add_argument("--resolution", type=float, default=0.04, help="Grid resolution in meters (default: 4cm)")
-    parser.add_argument("--num_bumps", type=int, default=300, help="Number of bumps to generate (default: 300)")
-    parser.add_argument("--min_radius", type=int, default=20, help="Minimum bump radius in cells (default: 20)")
-    parser.add_argument("--max_radius", type=int, default=100, help="Maximum bump radius in cells (default: 100)")
+    parser.add_argument("--size", type=float, default=100.0, help="Terrain size in meters (default: 100m x 100m)")
+    parser.add_argument("--resolution", type=float, default=0.2, help="Grid resolution in meters (default: 20cm)")
+    parser.add_argument("--num_bumps", type=int, default=6000, help="Number of bumps to generate (default: 6000)")
+    parser.add_argument("--min_radius", type=int, default=4, help="Minimum bump radius in cells (default: 4)")
+    parser.add_argument("--max_radius", type=int, default=20, help="Maximum bump radius in cells (default: 20)")
     parser.add_argument("--min_height", type=float, default=0.0, help="Minimum bump height fraction (default: 0.0)")
     parser.add_argument("--max_height", type=float, default=1.0, help="Maximum bump height fraction (default: 1.0)")
     parser.add_argument("--height_bias", type=float, default=2.0, help="Power law bias for height distribution (>1 favors smaller bumps, default: 2.0)")

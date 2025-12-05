@@ -4,12 +4,10 @@
   <include file="./common/materials.xml"/>
   <asset>
     <material name="mat_terrain" rgba="0.7 0.7 0.7 1"/>
-    <!-- Pre-generated 20m x 20m heightfield with 4cm resolution (500x500 grid)
-         size="10 10 Z 0.02" where Z controls max vertical height in meters. -->
-    <hfield name="uneven_10m" file="common/heightfields/terrain.png" nrow="500" ncol="500" size="10 10 2 0.02"/>
+    <!-- Pre-generated 100m x 100m heightfield with 20cm resolution (500x500 grid)
+         size="50 50 Z 0.02" where Z controls max vertical height in meters. -->
+    <hfield name="uneven_100m" file="common/heightfields/terrain.png" nrow="500" ncol="500" size="50 50 2 0.02"/>
   </asset>
-
-
 
   <statistic extent="2" center="0 0 1"/>
 
@@ -48,7 +46,7 @@
 
     <!-- Uneven terrain heightfield. Start at z=-0.04 so the plane at z=0 makes the surface effectively flat.
          During resets, randomize this geom's z position uniformly in (-0.04, 0) to vary terrain exposure. -->
-<geom name="terrain_hf" type="hfield" hfield="uneven_10m" pos="0 0 0" friction="1.0 0.005 0.001" conaffinity="1" contype="1" condim="3" material="mat_terrain"/>
+<geom name="terrain_hf" type="hfield" hfield="uneven_100m" pos="0 0 0" friction="1.0 0.005 0.001" conaffinity="1" contype="1" condim="3" material="mat_terrain"/>
 
 <body name="torso" pos="0 0 3.5" childclass="body">
       <light name="top" pos="0 0 2" mode="trackcom"/>

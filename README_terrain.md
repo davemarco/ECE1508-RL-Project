@@ -8,7 +8,7 @@ Creates a heightfield PNG for uneven terrain in MuJoCo.
 python generate_terrain.py
 ```
 
-This generates `common/heightfields/terrain.png` (20m×20m terrain with smooth bumps).
+This generates `common/heightfields/terrain.png` (100m×100m terrain with smooth bumps).
 
 ## Preview Terrain
 
