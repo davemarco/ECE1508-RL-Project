@@ -14,9 +14,6 @@ pip3 install -r requirements.txt
 
 ## PPO
 To train PPO in the baseline environment, run this command
-cd ECE1508-RL-Project && \
-python3 train_PPO_SAC.py --algo ${ALGO} --env HumanoidWalkWithObstacles --config_file ${ALGO}_config.json \
---output_dir /home/results/${PROJECT_NAME}/${ALGO}-uneven_exp${EXP_NUM}_seed${SEED}
 ```
 python3 train_PPO_SAC.py --algo PPO --env HumanoidWalk --config_file PPO_config.json \
 --output_dir <path_to_output_directory>
