@@ -45,6 +45,8 @@ python3 train_PPO_SAC.py --algo SAC --env HumanoidWalkWithObstacles --config_fil
 
 
 ## TD3 (FastTD3)
+First decide on an <experiment_name> and random seed <seed>.
+
 To train TD3 in the baseline environment, use this command
 ```
 python3 train_fasttd3.py --env_name HumanoidWalk \
