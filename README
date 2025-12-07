@@ -2,13 +2,15 @@ To use this repo first clone it with the command
 
 git clone https://github.com/davemarco/ECE1508-RL-Project/tree/main
 
-To train PPO in the baseline environment, use the command
+Install requirements.txt with pip install -r requirements.txt
 
-To train PPO in the modified environment, use the command
+To train PPO in the baseline environment, run the file
 
-To train SAC in the baseline environment, use the command
+To train PPO in the modified environment, run the file
 
-To train SAC in the modified environment, use the command
+To train SAC in the baseline environment, run the file
+
+To train SAC in the modified environment, run the file
 
 To train TD3 in the baseline environment, use the command
 
