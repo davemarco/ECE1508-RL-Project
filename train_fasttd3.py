@@ -60,7 +60,7 @@ try:
 except ImportError:
     imageio = None
 
-from fast_td3.mujoco_playground_env import make_env
+from core.envs.mujoco_playground_env_humanoid_uneven import make_env
 
 from tensordict import from_module
 
