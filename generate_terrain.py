@@ -6,22 +6,28 @@ from scipy.ndimage import gaussian_filter
 
 def get_args():
     parser = argparse.ArgumentParser(description="Generate uneven terrain heightfield for MuJoCo")
-    parser.add_argument("--size", type=float, default=100.0, help="Terrain size in meters (default: 100m x 100m)")
-    parser.add_argument("--resolution", type=float, default=0.2, help="Grid resolution in meters (default: 20cm)")
-    parser.add_argument("--num_bumps", type=int, default=6000, help="Number of bumps to generate (default: 6000)")
-    parser.add_argument("--min_radius", type=int, default=4, help="Minimum bump radius in cells (default: 4)")
-    parser.add_argument("--max_radius", type=int, default=20, help="Maximum bump radius in cells (default: 20)")
+    parser.add_argument("--size", type=float, default=200.0, help="Terrain size in meters (default: 200m x 200m)")
+    parser.add_argument("--resolution", type=float, default=0.2, help="Grid resolution in meters (default: 0.2m)")
+    parser.add_argument("--num_bumps", type=int, default=None, help="Number of bumps to generate (default: auto-scaled with area)")
+    parser.add_argument("--min_radius", type=int, default=1, help="Minimum bump radius in cells (default: 4)")
+    parser.add_argument("--max_radius", type=int, default=5, help="Maximum bump radius in cells (default: 20)")
     parser.add_argument("--min_height", type=float, default=0.0, help="Minimum bump height fraction (default: 0.0)")
     parser.add_argument("--max_height", type=float, default=1.0, help="Maximum bump height fraction (default: 1.0)")
     parser.add_argument("--height_bias", type=float, default=2.0, help="Power law bias for height distribution (>1 favors smaller bumps, default: 2.0)")
     parser.add_argument("--noise_std", type=float, default=0.0, help="Standard deviation of global noise (default: 0)")
-    parser.add_argument("--smooth_sigma", type=float, default=3.0, help="Gaussian smoothing sigma (default: 3.0)")
+    parser.add_argument("--smooth_sigma", type=float, default=0.0, help="Gaussian smoothing sigma (default: 0.0, disabled)")
     parser.add_argument("--output", type=str, default="common/heightfields/terrain.png", help="Output PNG path")
     parser.add_argument("--seed", type=int, default=0, help="Random seed (default: 0)")
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = get_args()
+
+    # Auto-scale bump count to maintain density (8000 bumps over 100m × 100m = 0.8 bumps/m²).
+    if args.num_bumps is None:
+        bumps_per_m2 = 20000 / (100.0 * 100.0)
+        args.num_bumps = max(1, int(bumps_per_m2 * args.size * args.size))
+        print(f"Auto-scaled bump count for {args.size}m × {args.size}m terrain: {args.num_bumps}")
 
     # Grid: size / resolution
     N = int(args.size / args.resolution)
@@ -58,13 +64,13 @@ if __name__ == "__main__":
 
         h[mask] = np.maximum(h[mask], bump[mask])
 
-    # Apply Gaussian smoothing to remove sharp transitions
-    if args.smooth_sigma > 0:
-        h = gaussian_filter(h, sigma=args.smooth_sigma)
-
-    # Add gentle global roughness
-    if args.noise_std > 0:
-        h += rng.normal(0.0, args.noise_std, size=h.shape).astype(np.float32)
+    # # Apply Gaussian smoothing to remove sharp transitions
+    # if args.smooth_sigma > 0:
+    #     h = gaussian_filter(h, sigma=args.smooth_sigma)
+    #
+    # # Add gentle global roughness
+    # if args.noise_std > 0:
+    #     h += rng.normal(0.0, args.noise_std, size=h.shape).astype(np.float32)
 
     h = np.clip(h, 0.0, 1.0)
 
