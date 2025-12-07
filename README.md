@@ -17,6 +17,8 @@ pip3 install -r requirements.txt
 
 # Training & Evaluation
 
+For each algorithm, choose an output directory at path <path_to_output_directory>.
+
 ## PPO
 To train PPO in the baseline environment, run this command
 ```
