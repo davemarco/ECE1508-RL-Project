@@ -4,6 +4,11 @@ To use this repo first clone it with the command
 ```
 git clone https://github.com/davemarco/ECE1508-RL-Project
 ```
+Navigate to the installed repo directory with the command
+
+```
+cd ECE1508-RL-Project
+```
 
 Set up the environment with the command
 ```
