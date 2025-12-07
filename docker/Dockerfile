@@ -40,9 +40,10 @@ RUN pip3 install --upgrade pip
 RUN pip3 install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cu128
 
 COPY requirements.txt requirements.txt
-# COPY requirements_playground.txt requirements_playground.txt
+COPY requirements_playground.txt requirements_playground.txt
 RUN pip3 install -r requirements.txt
-# RUN pip3 install --no-build-isolation -r requirements_playground.txt
+RUN pip3 install -r requirements_playground.txt
+RUN pip3 install --no-build-isolation nvidia-cudnn-cu12==9.16.0.29
 
 
 #? Download mujoco_menagerie
