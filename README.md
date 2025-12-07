@@ -2,7 +2,7 @@
 
 To use this repo first clone it with the command 
 ```
-git clone https://github.com/davemarco/ECE1508-RL-Project/tree/main
+git clone https://github.com/davemarco/ECE1508-RL-Project
 ```
 
 Set up the environment with the command
