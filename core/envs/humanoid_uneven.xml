@@ -4,9 +4,9 @@
   <include file="./common/materials.xml"/>
   <asset>
     <material name="mat_terrain" rgba="0.7 0.7 0.7 1"/>
-    <!-- Pre-generated 100m x 100m heightfield with 20cm resolution (500x500 grid)
-         size="50 50 Z 0.02" where Z controls max vertical height in meters. -->
-    <hfield name="uneven_100m" file="common/heightfields/terrain.png" nrow="500" ncol="500" size="50 50 2 0.02"/>
+    <!-- Pre-generated 200m x 200m heightfield with 0.2m resolution (1000x1000 grid)
+         size="100 100 Z 0.02" where Z controls max vertical height in meters. -->
+    <hfield name="uneven_200m" file="common/heightfields/terrain.png" nrow="1000" ncol="1000" size="100 100 1.5 0.02"/>
   </asset>
 
   <statistic extent="2" center="0 0 1"/>
@@ -46,12 +46,12 @@
 
     <!-- Uneven terrain heightfield. Start at z=-0.04 so the plane at z=0 makes the surface effectively flat.
          During resets, randomize this geom's z position uniformly in (-0.04, 0) to vary terrain exposure. -->
-<geom name="terrain_hf" type="hfield" hfield="uneven_100m" pos="0 0 0" friction="1.0 0.005 0.001" conaffinity="1" contype="1" condim="3" material="mat_terrain"/>
+<geom name="terrain_hf" type="hfield" hfield="uneven_200m" pos="0 0 0" friction="1.0 0.005 0.001" conaffinity="1" contype="1" condim="3" material="mat_terrain"/>
 
 <body name="torso" pos="0 0 3.5" childclass="body">
       <light name="top" pos="0 0 2" mode="trackcom"/>
-      <camera name="back" pos="-3 0 1" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
-      <camera name="side" pos="0 -3 1" xyaxes="1 0 0 0 1 2" mode="trackcom"/>
+      <camera name="back" pos="-6 0 2" xyaxes="0 -1 0 1 0 2" mode="trackcom"/>
+      <camera name="side" pos="0 -6 2" xyaxes="1 0 0 0 1 2" mode="trackcom"/>
       <freejoint name="root"/>
       <site name="root" class="force-torque"/>
       <geom name="torso" fromto="0 -.07 0 0 .07 0" size=".07"/>
